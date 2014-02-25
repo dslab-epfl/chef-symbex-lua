@@ -434,6 +434,18 @@ static int handle_luainit (lua_State *L) {
     return dostring(L, init, name);
 }
 
+#ifdef LUA_SYMBEX
+static void handle_symbex(lua_State *L) {
+	const char *symbex_env = getenv("LUASYMBEX");
+	if (symbex_env == NULL || symbex_env[0] == '\0') {
+		lua_pushboolean(L, 0);
+	} else {
+		lua_pushboolean(L, 1);
+	}
+	lua_setfield(L, LUA_REGISTRYINDEX, "LUA_SYMBEX");
+}
+#endif
+
 
 static int pmain (lua_State *L) {
   int argc = (int)lua_tointeger(L, 1);
@@ -450,8 +462,15 @@ static int pmain (lua_State *L) {
   if (args[has_v]) print_version();
   if (args[has_E]) {  /* option '-E'? */
     lua_pushboolean(L, 1);  /* signal for libraries to ignore env. vars. */
-    lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV");
+    lua_setfield(L, LUA_REGISTRYINDEX, "LUA_NOENV"); // XXX: Ugly hardcoding
+#ifdef LUA_SYMBEX
+  } else {
+	handle_symbex(L);
   }
+#else
+  }
+#endif
+
   /* open standard libraries */
   luaL_checkversion(L);
   lua_gc(L, LUA_GCSTOP, 0);  /* stop collector during initialization */
