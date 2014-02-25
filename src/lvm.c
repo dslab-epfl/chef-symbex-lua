@@ -26,6 +26,10 @@
 #include "ltm.h"
 #include "lvm.h"
 
+#ifdef _LUA_SYMBEX_TRACE
+#include "s2e.h"
+#endif
+
 
 
 /* limit for table tag-method chains (to avoid loops) */
@@ -533,11 +537,57 @@ void luaV_finishOp (lua_State *L) {
 #define vmcase(l,b)	case l: {b}  break;
 #define vmcasenb(l,b)	case l: {b}		/* nb = no break */
 
+#ifdef _LUA_SYMBEX_TRACE
+
+#define _SYMBEX_TRACE_SIZE   2
+
+typedef struct {
+	uint32_t op_code;
+	uint32_t frame_count;
+	uint32_t frames[_SYMBEX_TRACE_SIZE];
+} __attribute__((packed)) symbex_TraceUpdate;
+
+static symbex_TraceUpdate trace_update;
+
+static int report_trace(lua_State *L) {
+	CallInfo *ci = L->ci;
+	const Instruction *i = ci->u.l.savedpc;
+	trace_update.op_code = GET_OPCODE(*i);
+	trace_update.frame_count = _SYMBEX_TRACE_SIZE;
+	trace_update.frames[0] = (uintptr_t)ci_func(ci)->p;
+	trace_update.frames[1] = (uintptr_t)i;
+
+	if (s2e_invoke_plugin("InterpreterMonitor", (void*)&trace_update,
+			sizeof(symbex_TraceUpdate)) != 0) {
+		return -1;
+	}
+#if 0
+	printf("[0x%08X / 0x%08X] %d\n",
+			trace_update.frames[0], trace_update.frames[1],
+			trace_update.op_code);
+#endif
+
+	return 0;
+}
+
+static int is_symbex(lua_State *L) {
+	int b;
+	lua_getfield(L, LUA_REGISTRYINDEX, "LUA_SYMBEX");
+	b = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return b;
+}
+
+#endif /* LUA_TRACE */
+
 void luaV_execute (lua_State *L) {
   CallInfo *ci = L->ci;
   LClosure *cl;
   TValue *k;
   StkId base;
+#ifdef _LUA_SYMBEX_TRACE
+  int symbex = is_symbex(L);
+#endif /* LUA_TRACE */
  newframe:  /* reentry point when frame changes (call/return) */
   lua_assert(ci == L->ci);
   cl = clLvalue(ci->func);
@@ -555,6 +605,11 @@ void luaV_execute (lua_State *L) {
     ra = RA(i);
     lua_assert(base == ci->u.l.base);
     lua_assert(base <= L->top && L->top < L->stack + L->stacksize);
+#ifdef _LUA_SYMBEX_TRACE
+    if (symbex != 0) {
+    	report_trace(L);
+    }
+#endif /* LUA_TRACE */
     vmdispatch (GET_OPCODE(i)) {
       vmcase(OP_MOVE,
         setobjs2s(L, ra, RB(i));

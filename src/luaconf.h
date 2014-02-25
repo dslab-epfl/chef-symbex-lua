@@ -550,7 +550,14 @@
 
 /* }================================================================== */
 
+/*
+** @@ LUA_SYMBEX controls whether the interpreter is instrumented
+** with symbolic execution capabilities.
+*/
 
+#ifdef LUA_SYMBEX
+#define _LUA_SYMBEX_TRACE
+#endif
 
 
 /* =================================================================== */
