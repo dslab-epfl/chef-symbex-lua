@@ -171,6 +171,7 @@ lstate.o: lstate.c lua.h luaconf.h lapi.h llimits.h lstate.h lobject.h \
 lstring.o: lstring.c lua.h luaconf.h lmem.h llimits.h lobject.h lstate.h \
  ltm.h lzio.h lstring.h lgc.h s2e.h
 lstrlib.o: lstrlib.c lua.h luaconf.h lauxlib.h lualib.h
+lsymbexlib.o: lsymbexlib.c lua.h lauxlib.h lualib.h s2e.h
 ltable.o: ltable.c lua.h luaconf.h ldebug.h lstate.h lobject.h llimits.h \
  ltm.h lzio.h lmem.h ldo.h lgc.h lstring.h ltable.h lvm.h
 ltablib.o: ltablib.c lua.h luaconf.h lauxlib.h lualib.h
