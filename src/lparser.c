@@ -461,6 +461,9 @@ static void breaklabel (LexState *ls) {
 ** message when label name is a reserved word (which can only be 'break')
 */
 static l_noret undefgoto (LexState *ls, Labeldesc *gt) {
+#ifdef LUA_NO_INTERNING
+#define isreserved luaX_isreserved
+#endif
   const char *msg = isreserved(gt->name)
                     ? "<%s> at line %d not inside a loop"
                     : "no visible label " LUA_QS " for <goto> at line %d";

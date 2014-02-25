@@ -185,7 +185,9 @@ static void f_luaopen (lua_State *L, void *ud) {
   UNUSED(ud);
   stack_init(L, L);  /* init stack */
   init_registry(L, g);
+#ifndef LUA_NO_INTERNING
   luaS_resize(L, MINSTRTABSIZE);  /* initial size of string table */
+#endif
   luaT_init(L);
   luaX_init(L);
   /* pre-create memory-error message */
@@ -222,7 +224,9 @@ static void close_state (lua_State *L) {
   global_State *g = G(L);
   luaF_close(L, L->stack);  /* close all upvalues for this thread */
   luaC_freeallobjects(L);  /* collect all objects */
+#ifndef LUA_NO_INTERNING
   luaM_freearray(L, G(L)->strt.hash, G(L)->strt.size);
+#endif
   luaZ_freebuffer(L, &g->buff);
   freestack(L);
   lua_assert(gettotalbytes(g) == sizeof(LG));
@@ -281,9 +285,11 @@ LUA_API lua_State *lua_newstate (lua_Alloc f, void *ud) {
   g->uvhead.u.l.next = &g->uvhead;
   g->gcrunning = 0;  /* no GC while building state */
   g->GCestimate = 0;
+#ifndef LUA_NO_INTERNING
   g->strt.size = 0;
   g->strt.nuse = 0;
   g->strt.hash = NULL;
+#endif
   setnilvalue(&g->l_registry);
   luaZ_initbuffer(L, &g->buff);
   g->panic = NULL;

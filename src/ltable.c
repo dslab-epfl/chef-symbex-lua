@@ -106,8 +106,10 @@ static Node *mainposition (const Table *t, const TValue *key) {
       }
       return hashstr(t, rawtsvalue(key));
     }
+#ifndef LUA_NO_INTERNING
     case LUA_TSHRSTR:
       return hashstr(t, rawtsvalue(key));
+#endif
     case LUA_TBOOLEAN:
       return hashboolean(t, bvalue(key));
     case LUA_TLIGHTUSERDATA:
@@ -459,11 +461,11 @@ const TValue *luaH_getint (Table *t, int key) {
   }
 }
 
-
 /*
 ** search function for short strings
 */
 const TValue *luaH_getstr (Table *t, TString *key) {
+#ifndef LUA_NO_INTERNING
   Node *n = hashstr(t, key);
   lua_assert(key->tsv.tt == LUA_TSHRSTR);
   do {  /* check whether `key' is somewhere in the chain */
@@ -472,6 +474,19 @@ const TValue *luaH_getstr (Table *t, TString *key) {
     else n = gnext(n);
   } while (n);
   return luaO_nilobject;
+#else
+  if (key->tsv.extra == 0) {  /* no hash? */
+    key->tsv.hash = luaS_hash(getstr(key), key->tsv.len, key->tsv.hash);
+    key->tsv.extra = 1;  /* now it has its hash */
+  }
+  Node *n = hashstr(t, key);
+  do {  /* check whether `key' is somewhere in the chain */
+    if (ttisstring(gkey(n)) && luaS_eqstr(rawtsvalue(gkey(n)), key))
+      return gval(n);  /* that's it */
+    else n = gnext(n);
+  } while (n);
+  return luaO_nilobject;
+#endif
 }
 
 
@@ -480,7 +495,9 @@ const TValue *luaH_getstr (Table *t, TString *key) {
 */
 const TValue *luaH_get (Table *t, const TValue *key) {
   switch (ttype(key)) {
+#ifndef LUA_NO_INTERNING
     case LUA_TSHRSTR: return luaH_getstr(t, rawtsvalue(key));
+#endif
     case LUA_TNIL: return luaO_nilobject;
     case LUA_TNUMBER: {
       int k;

@@ -43,8 +43,12 @@ int luaS_eqlngstr (TString *a, TString *b) {
 ** equality for strings
 */
 int luaS_eqstr (TString *a, TString *b) {
+#ifndef LUA_NO_INTERNING
   return (a->tsv.tt == b->tsv.tt) &&
          (a->tsv.tt == LUA_TSHRSTR ? eqshrstr(a, b) : luaS_eqlngstr(a, b));
+#else
+  return (a->tsv.tt == b->tsv.tt) && luaS_eqlngstr(a, b);
+#endif
 }
 
 
@@ -57,6 +61,7 @@ unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
   return h;
 }
 
+#ifndef LUA_NO_INTERNING
 
 /*
 ** resizes the string table
@@ -91,6 +96,8 @@ void luaS_resize (lua_State *L, int newsize) {
   tb->size = newsize;
 }
 
+#endif
+
 
 /*
 ** creates a new string object
@@ -109,7 +116,7 @@ static TString *createstrobj (lua_State *L, const char *str, size_t l,
   return ts;
 }
 
-
+#ifndef LUA_NO_INTERNING
 /*
 ** creates a new short string, inserting it into string table
 */
@@ -148,12 +155,14 @@ static TString *internshrstr (lua_State *L, const char *str, size_t l) {
   }
   return newshrstr(L, str, l, h);  /* not found; create a new string */
 }
+#endif
 
 
 /*
 ** new string (with explicit length)
 */
 TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
+#ifndef LUA_NO_INTERNING
   if (l <= LUAI_MAXSHORTLEN)  /* short string? */
     return internshrstr(L, str, l);
   else {
@@ -161,6 +170,11 @@ TString *luaS_newlstr (lua_State *L, const char *str, size_t l) {
       luaM_toobig(L);
     return createstrobj(L, str, l, LUA_TLNGSTR, G(L)->seed, NULL);
   }
+#else
+  if (l + 1 > (MAX_SIZET - sizeof(TString))/sizeof(char))
+    luaM_toobig(L);
+  return createstrobj(L, str, l, LUA_TLNGSTR, G(L)->seed, NULL);
+#endif
 }
 
 
