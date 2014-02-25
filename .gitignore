@@ -1,0 +1,16 @@
+# Eclipse files
+.project
+.cproject
+.pydevproject
+.settings/
+
+# Intermediate files
+*.o
+
+# Emacs backups
+*~
+
+# Generated binaries
+src/liblua.a
+src/lua
+src/luac
