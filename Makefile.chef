@@ -1,0 +1,95 @@
+#
+# Copyright (C) 2014 EPFL.
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+
+# The above copyright notice and this permission notice shall be included in
+# all copies or substantial portions of the Software.
+
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+# THE SOFTWARE.
+
+
+# This Makefile helps set up automatically the SE-Genie Lua
+# evaluation environment.
+
+LUASRC := $(dir $(lastword $(MAKEFILE_LIST)))
+export INSTALL_TOP
+export SYM_CFLAGS
+
+LUAROCKS := luarocks-2.0.13
+
+ROCKS := alt-getopt lpeg lua_cliargs luacov luafilesystem luahaml moonscript web_sanitize
+
+OPT_LEVELS := noopt opt
+OPT_TARGETS := $(foreach opt,$(OPT_LEVELS),lua-$(opt))
+OPT_BUILD_STAMPS := $(foreach opt,$(OPT_LEVELS),stamps/lua-$(opt))
+OPT_LUAROCKS_STAMPS := $(foreach opt,$(OPT_LEVELS),stamps/luarocks-$(opt))
+OPT_ROCKS_STAMPS := $(foreach opt,$(OPT_LEVELS),stamps/rocks-$(opt))
+
+.PHONY: guest host clean $(OPT_TARGETS)
+
+guest: SYMBEX_FLAG = -DLUA_SYMBEX
+guest: $(OPT_TARGETS)
+
+host: SYMBEX_FLAG = 
+host: lua-noopt
+
+$(OPT_TARGETS): lua-%: stamps/rocks-%
+lua-opt: lua-noopt
+
+stamps/rocks-noopt: INSTALL_TOP = $(realpath .)/lua-noopt
+stamps/rocks-noopt: SYM_CFLAGS = $(SYMBEX_FLAG)
+
+stamps/rocks-opt: INSTALL_TOP = $(realpath .)/lua-opt
+stamps/rocks-opt: SYM_CFLAGS = $(SYMBEX_FLAG) -DLUA_NO_INTERNING
+
+clean:
+	rm -rf stamps/
+	rm -rf $(OPT_TARGETS)
+
+# Lua builds
+############
+
+$(OPT_BUILD_STAMPS):
+	$(MAKE) -C $(LUASRC) clean
+	$(MAKE) -C $(LUASRC) linux
+	$(MAKE) -C $(LUASRC) install
+	mkdir -p stamps && touch $@
+
+# Downloading Luarocks
+######################
+
+$(LUAROCKS).tar.gz:
+	wget http://luarocks.org/releases/$(LUAROCKS).tar.gz
+
+$(LUAROCKS)/configure: $(LUAROCKS).tar.gz
+	tar -xzvf $(LUAROCKS).tar.gz
+	touch $@
+
+# Luarocks builds
+#################
+
+$(OPT_LUAROCKS_STAMPS): $(LUAROCKS)/configure
+$(OPT_LUAROCKS_STAMPS): stamps/luarocks-%: stamps/lua-%
+	mkdir -p $(HOME)/.luarocks
+	echo "variables = { [\"CFLAGS\"] = \"-O2 -fPIC $(SYM_CFLAGS)\" }" >$(HOME)/.luarocks/config.lua
+	cd $(LUAROCKS) && ./configure --prefix=$(INSTALL_TOP) --with-lua=$(INSTALL_TOP) && make clean && make && make install
+	mkdir -p stamps && touch $@
+
+# Installing the rocks
+######################
+
+$(OPT_ROCKS_STAMPS): stamps/rocks-%: stamps/luarocks-%
+	for rock in $(ROCKS); do $(INSTALL_TOP)/bin/luarocks install $$rock; done
+	mkdir -p stamps && touch $@
