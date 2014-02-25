@@ -17,6 +17,19 @@
 #include "lstate.h"
 #include "lstring.h"
 
+#ifdef LUA_SYMBEX
+#include "s2e.h"
+
+#define IS_SYMBOLIC_STR_SIZE(str, size) \
+	(s2e_is_symbolic(&(str), sizeof(str)) || \
+     s2e_is_symbolic(&(size), sizeof(size)) || \
+     ((str) != NULL && s2e_is_symbolic((str), size)))
+
+#define IS_SYMBOLIC_STR(str) \
+	(s2e_is_symbolic(&(str), sizeof(str)) || \
+     ((str) != NULL && s2e_is_symbolic((str), 0)))
+#endif
+
 
 /*
 ** Lua will use at most ~(2^LUAI_HASHLIMIT) bytes from a string to
@@ -53,12 +66,16 @@ int luaS_eqstr (TString *a, TString *b) {
 
 
 unsigned int luaS_hash (const char *str, size_t l, unsigned int seed) {
+#ifdef LUA_SYMBEX
+  return 0;
+#else
   unsigned int h = seed ^ cast(unsigned int, l);
   size_t l1;
   size_t step = (l >> LUAI_HASHLIMIT) + 1;
   for (l1 = l; l1 >= step; l1 -= step)
     h = h ^ ((h<<5) + (h>>2) + cast_byte(str[l1 - 1]));
   return h;
+#endif
 }
 
 #ifndef LUA_NO_INTERNING
