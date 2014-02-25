@@ -384,14 +384,22 @@
 ** ===================================================================
 */
 
+#ifdef LUA_SYMBEX
+#define LUA_NUMBER ptrdiff_t
+#else
 #define LUA_NUMBER_DOUBLE
 #define LUA_NUMBER	double
+#endif
 
 /*
 @@ LUAI_UACNUMBER is the result of an 'usual argument conversion'
 @* over a number.
 */
+#ifdef LUA_SYMBEX
+#define LUAI_UACNUMBER ptrdiff_t
+#else
 #define LUAI_UACNUMBER	double
+#endif
 
 
 /*
@@ -400,11 +408,17 @@
 @@ lua_number2str converts a number to a string.
 @@ LUAI_MAXNUMBER2STR is maximum size of previous conversion.
 */
+#ifdef LUA_SYMBEX
+#define LUA_NUMBER_SCAN		"%ld"
+#define LUA_NUMBER_FMT		"%ld"
+#define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
+#define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
+#else
 #define LUA_NUMBER_SCAN		"%lf"
 #define LUA_NUMBER_FMT		"%.14g"
 #define lua_number2str(s,n)	sprintf((s), LUA_NUMBER_FMT, (n))
 #define LUAI_MAXNUMBER2STR	32 /* 16 digits, sign, point, and \0 */
-
+#endif
 
 /*
 @@ l_mathop allows the addition of an 'l' or 'f' to all math operations
