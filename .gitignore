@@ -1,8 +1,9 @@
-# Eclipse files
+# IDE files
 .project
 .cproject
 .pydevproject
 .settings/
+.idea/
 
 # Intermediate files
 *.o
@@ -14,3 +15,6 @@
 src/liblua.a
 src/lua
 src/luac
+
+# Chef binaries
+chef/build/
