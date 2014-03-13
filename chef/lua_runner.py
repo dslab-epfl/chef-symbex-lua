@@ -43,14 +43,16 @@ def main():
     parser = argparse.ArgumentParser(description="Run Lua scripts.")
     parser.add_argument("test_file",
                         help="The Lua test file")
-    parser.add_argument("exp_dir", nargs="?",
-                        help="The experiment directory used for replay")
+    parser.add_argument("arguments", nargs=argparse.REMAINDER,
+                        help="Lua script arguments")
+    parser.add_argument("-r", "--replay-dir",
+                        help="Replay tests from an experiment directory")
     args = parser.parse_args()
     args.test_file = os.path.abspath(args.test_file)
 
     symbex_opt = os.environ.setdefault("LUASYMBEXOPT", DEFAULT_SYMBEXOPT)
     this_dir = os.path.abspath(os.path.dirname(__file__))
-    install_dir = os.path.join(this_dir, "build", symbex_opt) # XXX: Hardcoded
+    install_dir = os.path.join(this_dir, "build", symbex_opt)  # XXX: Hardcoded
     targets_dir = os.path.join(this_dir, "targets")
 
     os.environ["LUA_PATH"] = ";".join([
@@ -82,18 +84,18 @@ def main():
     luacov_exec = os.path.join(install_dir, "bin", "luacov")
     analyzecov_exec = os.path.join(this_dir, "analyze_coverage.py")
 
-    if not args.exp_dir:
-        os.execvp(lua_exec, [lua_exec, args.test_file])
+    if not args.replay_dir:
+        os.execvp(lua_exec, [lua_exec, args.test_file] + args.arguments)
     else:
         for file_name in [LCOV_OUT, LCOV_REPORT]:
-            path = os.path.join(args.exp_dir, file_name)
+            path = os.path.join(args.replay_dir, file_name)
             if os.path.exists(path):
                 os.unlink(path)
 
         old_dir = os.getcwd()
-        os.chdir(args.exp_dir)
+        os.chdir(args.replay_dir)
 
-        subprocess.check_call([lua_exec, "-lluacov", args.test_file, "hl_test_cases.dat"])
+        subprocess.check_call([lua_exec, "-lluacov", args.test_file, "hl_test_cases.dat"] + args.arguments)
         assert os.path.isfile(LCOV_OUT), "Did not get the coverage file."
 
         subprocess.check_call([luacov_exec])
@@ -101,7 +103,7 @@ def main():
 
         os.chdir(old_dir)
 
-        subprocess.check_call([analyzecov_exec, args.exp_dir])
+        subprocess.check_call([analyzecov_exec, args.replay_dir])
 
 
 if __name__ == "__main__":
