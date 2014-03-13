@@ -23,7 +23,7 @@
 # This Makefile helps set up automatically the SE-Genie Lua
 # evaluation environment.
 
-LUASRC := $(dir $(lastword $(MAKEFILE_LIST)))
+LUASRC := $(dir $(lastword $(MAKEFILE_LIST)))/..
 export INSTALL_TOP
 export SYM_CFLAGS
 
