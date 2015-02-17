@@ -27,7 +27,7 @@ LUASRC := $(dir $(lastword $(MAKEFILE_LIST)))/..
 export INSTALL_TOP
 export SYM_CFLAGS
 
-LUAROCKS := luarocks-2.0.13
+LUAROCKS := luarocks-2.0.12
 
 ROCKS := alt-getopt lpeg lua_cliargs luacov luafilesystem luahaml moonscript web_sanitize
 
