@@ -57,25 +57,25 @@ def main():
 
     os.environ["LUA_PATH"] = ";".join([
         os.path.join(targets_dir, "?.lua"),
-        os.path.join(install_dir, "share/lua/5.2/?.lua"),
-        os.path.join(install_dir, "share/lua/5.2/?/init.lua"),
-        os.path.join(os.environ["HOME"], ".luarocks/share/lua/5.2/?.lua"),
-        os.path.join(os.environ["HOME"], ".luarocks/share/lua/5.2/?/init.lua"),
-        os.path.join(install_dir, "share/lua/5.2//?.lua"),
-        os.path.join(install_dir, "share/lua/5.2//?/init.lua"),
-        "/usr/local/share/lua/5.2/?.lua"
-        "/usr/local/share/lua/5.2/?/init.lua"
-        "/usr/local/lib/lua/5.2/?.lua"
-        "/usr/local/lib/lua/5.2/?/init.lua"
+        os.path.join(install_dir, "share/lua/5.3/?.lua"),
+        os.path.join(install_dir, "share/lua/5.3/?/init.lua"),
+        os.path.join(os.environ["HOME"], ".luarocks/share/lua/5.3/?.lua"),
+        os.path.join(os.environ["HOME"], ".luarocks/share/lua/5.3/?/init.lua"),
+        os.path.join(install_dir, "share/lua/5.3//?.lua"),
+        os.path.join(install_dir, "share/lua/5.3//?/init.lua"),
+        "/usr/local/share/lua/5.3/?.lua"
+        "/usr/local/share/lua/5.3/?/init.lua"
+        "/usr/local/lib/lua/5.3/?.lua"
+        "/usr/local/lib/lua/5.3/?/init.lua"
         "./?.lua",
         os.environ.get("LUA_PATH", "")
     ])
     os.environ["LUA_CPATH"] = ";".join([
         os.path.join(targets_dir, "?.so"),
-        os.path.join(install_dir, "lib/lua/5.2/?.so"),
-        os.path.join(os.environ["HOME"], ".luarocks/lib/lua/5.2/?.so"),
-        "/usr/local/lib/lua/5.2/?.so",
-        "/usr/local/lib/lua/5.2/loadall.so",
+        os.path.join(install_dir, "lib/lua/5.3/?.so"),
+        os.path.join(os.environ["HOME"], ".luarocks/lib/lua/5.3/?.so"),
+        "/usr/local/lib/lua/5.3/?.so",
+        "/usr/local/lib/lua/5.3/loadall.so",
         "./?.so",
         os.environ.get("LUA_CPATH", "")
     ])

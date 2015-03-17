@@ -27,7 +27,7 @@ LUASRC := $(dir $(lastword $(MAKEFILE_LIST)))/..
 export INSTALL_TOP
 export SYM_CFLAGS
 
-LUAROCKS := luarocks-2.0.12
+LUAROCKS := luarocks-2.2.0
 
 ROCKS := lpeg: \
          lua_cliargs:2.1-2 \
@@ -95,5 +95,5 @@ $(OPT_LUAROCKS_STAMPS): stamps/luarocks-%: stamps/lua-%
 ######################
 
 $(OPT_ROCKS_STAMPS): stamps/rocks-%: stamps/luarocks-%
-	for rock in $(ROCKS); do $(INSTALL_TOP)/bin/luarocks install $${rock%:*} $${rock#*:}; done
+	for rock in $(ROCKS); do LUASYMBEXOPT=$(notdir $(INSTALL_TOP)) ../lua_runner.py $(INSTALL_TOP)/bin/luarocks install $${rock%:*} $${rock#*:}; done
 	mkdir -p stamps && touch $@
