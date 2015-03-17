@@ -24,10 +24,10 @@ static int symbex_symstring(lua_State *L) {
 
 
 static int symbex_symint(lua_State *L) {
-	lua_Number value = luaL_checknumber(L, 1);
+	lua_Integer value = luaL_checkinteger(L, 1);
 	const char *name = luaL_checkstring(L, 2);
-	lua_Number min_value = luaL_optnumber(L, 3, 0);
-	lua_Number max_value = luaL_optnumber(L, 4, 0);
+	lua_Integer min_value = luaL_optinteger(L, 3, 0);
+	lua_Integer max_value = luaL_optinteger(L, 4, 0);
 
 	if (min_value > max_value) {
 	    return luaL_error(L, "invalid numeric range for symbolic integer");
@@ -40,13 +40,13 @@ static int symbex_symint(lua_State *L) {
         s2e_assume(value <= max_value);
     }
 
-	lua_pushnumber(L, value);
+	lua_pushinteger(L, value);
 	return 1;
 }
 
 
 static int symbex_killstate(lua_State *L) {
-	int status = luaL_optinteger(L, 1, 0);
+	lua_Integer status = luaL_optinteger(L, 1, 0);
 	const char *message = luaL_optstring(L, 2, "terminated");
 
 	s2e_kill_state(status, message);
@@ -75,8 +75,8 @@ static int symbex_issymbolic(lua_State *L) {
 
 
 static int symbex_calibrate(lua_State *L) {
-    lua_Number op = luaL_checknumber(L, 1);
-    lua_Number increment = luaL_optnumber(L, 2, 0);
+    lua_Integer op = luaL_checkinteger(L, 1);
+    lua_Integer increment = luaL_optinteger(L, 2, 0);
 
     enum {
         S2E_CHEF_CALIBRATE_START = 0x1000,
