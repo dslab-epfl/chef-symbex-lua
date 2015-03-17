@@ -1,0 +1,31 @@
+This is Lua 5.2.2, modified to be run in a Chef environment
+===========================================================
+
+All Chef-related additions are Copyright (c) EPFL 2014 and distributed
+under the MIT license.
+
+
+Setting up the Chef environment
+-------------------------------
+
+The Lua environment is set up automatically using the "Makefile.chef" file.
+
+We assume the following project structure for setting up Chef:
+
+$CHEF_ROOT
+  - s2e (S2E + the Chef core)
+  - lua-src (the Lua code base -- this tree)
+
+Create a $CHEF_ROOT/lua-src/build directory, and run the following
+inside the new directory:
+
+$ make -f ../Makefile.chef
+
+You can then use the "lua_runner.py" script to execute Lua scripts:
+
+$ ./lua_runner.py targets/test_json_concrete.lua
+$ LUASYMBEX=1 ./lua_runner.py targets/test_json_sym.lua
+
+In addition, the LUASYMBEXOPT environment variable controls the
+symbolic optimization levels.  Currently, they are "lua-noopt" and
+"lua-opt" (default).
