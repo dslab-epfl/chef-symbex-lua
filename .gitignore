@@ -1,0 +1,21 @@
+# IDE files
+.project
+.cproject
+.pydevproject
+.settings/
+.idea/
+
+# Intermediate files
+*.o
+
+# Emacs backups
+*~
+
+# Generated binaries
+src/liblua.a
+src/lua
+src/luac
+
+# Chef binaries
+chef/build/
+build/
