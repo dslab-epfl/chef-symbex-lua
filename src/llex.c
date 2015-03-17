@@ -63,13 +63,27 @@ static void save (LexState *ls, int c) {
 
 
 void luaX_init (lua_State *L) {
+#ifndef LUA_NO_INTERNING
   int i;
   for (i=0; i<NUM_RESERVED; i++) {
     TString *ts = luaS_new(L, luaX_tokens[i]);
     luaS_fix(ts);  /* reserved words are never collected */
     ts->tsv.extra = cast_byte(i+1);  /* reserved word */
   }
+#endif
 }
+
+#ifdef LUA_NO_INTERNING
+int luaX_isreserved(TString *s) {
+  int i;
+  const char *value = getstr(s);
+  for (i=0; i<NUM_RESERVED; i++) {
+    if (strcmp(value, luaX_tokens[i]) == 0)
+      return (i+1);
+  }
+  return 0;
+}
+#endif
 
 
 const char *luaX_token2str (LexState *ls, int token) {
@@ -483,6 +497,9 @@ static int llex (LexState *ls, SemInfo *seminfo) {
         return TK_EOS;
       }
       default: {
+#ifdef LUA_NO_INTERNING
+    	int kwd_index;
+#endif
         if (lislalpha(ls->current)) {  /* identifier or reserved word? */
           TString *ts;
           do {
@@ -491,11 +508,20 @@ static int llex (LexState *ls, SemInfo *seminfo) {
           ts = luaX_newstring(ls, luaZ_buffer(ls->buff),
                                   luaZ_bufflen(ls->buff));
           seminfo->ts = ts;
+#ifndef LUA_NO_INTERNING
           if (isreserved(ts))  /* reserved word? */
             return ts->tsv.extra - 1 + FIRST_RESERVED;
           else {
             return TK_NAME;
           }
+#else
+          kwd_index = luaX_isreserved(ts);
+          if (kwd_index)
+        	  return kwd_index - 1 + FIRST_RESERVED;
+          else {
+        	  return TK_NAME;
+          }
+#endif
         }
         else {  /* single-char tokens (+ - / ...) */
           int c = ls->current;

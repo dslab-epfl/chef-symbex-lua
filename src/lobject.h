@@ -53,7 +53,9 @@
 
 
 /* Variant tags for strings */
+#ifndef LUA_NO_INTERNING
 #define LUA_TSHRSTR	(LUA_TSTRING | (0 << 4))  /* short strings */
+#endif
 #define LUA_TLNGSTR	(LUA_TSTRING | (1 << 4))  /* long strings */
 
 
@@ -135,7 +137,9 @@ typedef struct lua_TValue TValue;
 #define ttisboolean(o)		checktag((o), LUA_TBOOLEAN)
 #define ttislightuserdata(o)	checktag((o), LUA_TLIGHTUSERDATA)
 #define ttisstring(o)		checktype((o), LUA_TSTRING)
+#ifndef LUA_NO_INTERNING
 #define ttisshrstring(o)	checktag((o), ctb(LUA_TSHRSTR))
+#endif
 #define ttislngstring(o)	checktag((o), ctb(LUA_TLNGSTR))
 #define ttistable(o)		checktag((o), ctb(LUA_TTABLE))
 #define ttisfunction(o)		checktype(o, LUA_TFUNCTION)

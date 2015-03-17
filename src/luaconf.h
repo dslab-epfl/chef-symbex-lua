@@ -229,8 +229,9 @@
 ** or tags for metamethods, as these strings must be internalized;
 ** #("function") = 8, #("__newindex") = 10.)
 */
+#ifndef LUA_NO_INTERNING
 #define LUAI_MAXSHORTLEN        40
-
+#endif
 
 
 /*

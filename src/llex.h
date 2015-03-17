@@ -66,6 +66,9 @@ typedef struct LexState {
 
 
 LUAI_FUNC void luaX_init (lua_State *L);
+#ifdef LUA_NO_INTERNING
+LUAI_FUNC int luaX_isreserved(TString *s);
+#endif
 LUAI_FUNC void luaX_setinput (lua_State *L, LexState *ls, ZIO *z,
                               TString *source, int firstchar);
 LUAI_FUNC TString *luaX_newstring (LexState *ls, const char *str, size_t l);

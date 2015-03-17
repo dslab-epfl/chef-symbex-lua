@@ -244,7 +244,9 @@ static void reallymarkobject (global_State *g, GCObject *o) {
   lu_mem size;
   white2gray(o);
   switch (gch(o)->tt) {
+#ifndef LUA_NO_INTERNING
     case LUA_TSHRSTR:
+#endif
     case LUA_TLNGSTR: {
       size = sizestring(gco2ts(o));
       break;  /* nothing else to mark; make it black */
@@ -668,9 +670,11 @@ static void freeobj (lua_State *L, GCObject *o) {
     case LUA_TTABLE: luaH_free(L, gco2t(o)); break;
     case LUA_TTHREAD: luaE_freethread(L, gco2th(o)); break;
     case LUA_TUSERDATA: luaM_freemem(L, o, sizeudata(gco2u(o))); break;
+#ifndef LUA_NO_INTERNING
     case LUA_TSHRSTR:
       G(L)->strt.nuse--;
       /* go through */
+#endif
     case LUA_TLNGSTR: {
       luaM_freemem(L, o, sizestring(gco2ts(o)));
       break;
@@ -771,9 +775,11 @@ static GCObject **sweeptolive (lua_State *L, GCObject **p, int *n) {
 static void checkSizes (lua_State *L) {
   global_State *g = G(L);
   if (g->gckind != KGC_EMERGENCY) {  /* do not change sizes in emergency */
+#ifndef LUA_NO_INTERNING
     int hs = g->strt.size / 2;  /* half the size of the string table */
     if (g->strt.nuse < cast(lu_int32, hs))  /* using less than that half? */
       luaS_resize(L, hs);  /* halve its size */
+#endif
     luaZ_freebuffer(L, &g->buff);  /* free concatenation buffer */
   }
 }
@@ -975,7 +981,9 @@ static void callallpendingfinalizers (lua_State *L, int propagateerrors) {
 
 void luaC_freeallobjects (lua_State *L) {
   global_State *g = G(L);
+#ifndef LUA_NO_INTERNING
   int i;
+#endif
   separatetobefnz(L, 1);  /* separate all objects with finalizers */
   lua_assert(g->finobj == NULL);
   callallpendingfinalizers(L, 0);
@@ -983,9 +991,11 @@ void luaC_freeallobjects (lua_State *L) {
   g->gckind = KGC_NORMAL;
   sweepwholelist(L, &g->finobj);  /* finalizers can create objs. in 'finobj' */
   sweepwholelist(L, &g->allgc);
+#ifndef LUA_NO_INTERNING
   for (i = 0; i < g->strt.size; i++)  /* free all string lists */
     sweepwholelist(L, &g->strt.hash[i]);
   lua_assert(g->strt.nuse == 0);
+#endif
 }
 
 
@@ -1035,7 +1045,11 @@ static lu_mem singlestep (lua_State *L) {
   switch (g->gcstate) {
     case GCSpause: {
       /* start to count memory traversed */
+#ifndef LUA_NO_INTERNING
       g->GCmemtrav = g->strt.size * sizeof(GCObject*);
+#else
+      g->GCmemtrav = 0;
+#endif
       lua_assert(!isgenerational(g));
       restartcollection(g);
       g->gcstate = GCSpropagate;
@@ -1059,6 +1073,7 @@ static lu_mem singlestep (lua_State *L) {
       }
     }
     case GCSsweepstring: {
+#ifndef LUA_NO_INTERNING
       int i;
       for (i = 0; i < GCSWEEPMAX && g->sweepstrgc + i < g->strt.size; i++)
         sweepwholelist(L, &g->strt.hash[g->sweepstrgc + i]);
@@ -1066,6 +1081,10 @@ static lu_mem singlestep (lua_State *L) {
       if (g->sweepstrgc >= g->strt.size)  /* no more strings to sweep? */
         g->gcstate = GCSsweepudata;
       return i * GCSWEEPCOST;
+#else
+      g->gcstate = GCSsweepudata;
+      return 0;
+#endif
     }
     case GCSsweepudata: {
       if (g->sweepfin) {

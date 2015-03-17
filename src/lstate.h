@@ -55,12 +55,13 @@ struct lua_longjmp;  /* defined in ldo.c */
 #define KGC_EMERGENCY	1	/* gc was forced by an allocation failure */
 #define KGC_GEN		2	/* generational collection */
 
-
+#ifndef LUA_NO_INTERNING
 typedef struct stringtable {
   GCObject **hash;
   lu_int32 nuse;  /* number of elements */
   int size;
 } stringtable;
+#endif
 
 
 /*
@@ -116,7 +117,9 @@ typedef struct global_State {
   l_mem GCdebt;  /* bytes allocated not yet compensated by the collector */
   lu_mem GCmemtrav;  /* memory traversed by the GC */
   lu_mem GCestimate;  /* an estimate of the non-garbage memory in use */
+#ifndef LUA_NO_INTERNING
   stringtable strt;  /* hash table for strings */
+#endif
   TValue l_registry;
   unsigned int seed;  /* randomized seed for hashes */
   lu_byte currentwhite;
